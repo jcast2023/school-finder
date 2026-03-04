@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Asegura que el contenedor del popup se adapte al modo oscuro */
+.dark .leaflet-popup-content-wrapper,
+.dark .leaflet-popup-tip {
+    background-color: #1e293b; /* Coincide con slate-800 */
+    color: #ffffff;
+}
+
+/* Cambia el color del botón de cerrar */
+.dark .leaflet-popup-close-button {
+    color: #ffffff !important;
+}
+
+/* Opcional: si quieres bordes redondeados tipo Tailwind */
+.leaflet-popup-content-wrapper {
+    border-radius: 0.75rem; /* rounded-xl */
+}
