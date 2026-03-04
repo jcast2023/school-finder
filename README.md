@@ -1,16 +1,36 @@
-# React + Vite
+# 🗺️ School Finder Pro
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**School Finder** es una aplicación web moderna y reactiva diseñada para ayudar a los usuarios a localizar instituciones educativas en su área local de forma rápida y sencilla. Utiliza geolocalización en tiempo real y la API de OpenStreetMap para ofrecer resultados precisos con una experiencia de usuario fluida.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Características Principales
 
-## React Compiler
+* 📍 **Geolocalización Automática**: El mapa se centra en tu posición actual al iniciar la aplicación.
+* 🌓 **Modo Oscuro Nativo**: Interfaz adaptativa con persistencia en el almacenamiento local (`localStorage`).
+* 📱 **Diseño Responsive**: Optimizado para una visualización perfecta en dispositivos móviles, tablets y escritorio.
+* 🔍 **Búsqueda por Radio**: Permite filtrar escuelas en un rango personalizable de kilómetros.
+* 🚗 **Integración con Google Maps**: Enlaces directos para obtener rutas de navegación hacia cada institución encontrada.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Tecnologías Utilizadas
 
-## Expanding the ESLint configuration
+* **Frontend**: [React.js](https://reactjs.org/) + [Vite](https://vitejs.dev/).
+* **Estilos**: [Tailwind CSS](https://tailwindcss.com/) para una interfaz moderna y utilitaria.
+* **Mapas**: [Leaflet](https://leafletjs.com/) & [OpenStreetMap](https://www.openstreetmap.org/).
+* **Animaciones**: [Framer Motion](https://www.framer.com/motion/) para transiciones suaves y estados de carga.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 📦 Instalación y Configuración
+
+1.  **Clonar el repositorio**:
+    ```bash
+    git clone [https://github.com/jcast2023/school-finder.git](https://github.com/jcast2023/school-finder.git)
+    ```
+2.  **Instalar dependencias**:
+    ```bash
+    npm install
+    ```
+3.  **Ejecutar en modo desarrollo**:
+    ```bash
+    npm run dev
+    ```
+
