@@ -96,6 +96,13 @@ Se muestran las instituciones cercanas en el mapa.
 
 El usuario puede abrir Google Maps para obtener la ruta exacta.
 
+## Vista previa
+
+![Inicio](./public/screenshots/home.png)
+![Resultados](./public/screenshots/results.png)
+![Ruta](./public/screenshots/route.png)
+
+
 👨‍💻 Autor
 
 Proyecto desarrollado por Julio Castillo como parte de un proyecto de desarrollo web con React.
