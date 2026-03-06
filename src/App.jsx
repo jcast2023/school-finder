@@ -1,22 +1,26 @@
 import { useRef, useState, useEffect } from "react";
 import L from "leaflet";
-
 import MapView from "./components/MapView";
 import SearchControls from "./components/SearchControls";
 import ResultsList from "./components/ResultsList";
 import usePlaceSearch from "./hooks/usePlaceSearch";
 
 function App() {
+
   const mapRef = useRef(null);
+
   const [radius, setRadius] = useState(3000);
+  const [userLocation, setUserLocation] = useState(null);
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("theme") === "dark"
+  );
 
-  // 🔥 Inicializa leyendo localStorage correctamente
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const { places, loading, hasSearched, searchPlaces } =
+    usePlaceSearch("school");
 
-  // 🔥 Este effect es el único que controla la clase
+  // 🌙 Control de dark mode
   useEffect(() => {
+
     const root = document.documentElement;
 
     if (darkMode) {
@@ -26,92 +30,134 @@ function App() {
       root.classList.remove("dark");
       localStorage.setItem("theme", "light");
     }
+
   }, [darkMode]);
 
-  const toggleTheme = () => {
-    setDarkMode(prev => !prev);
-  };
 
-  const {
-    places,
-    loading,
-    hasSearched,
-    searchPlaces,
-  } = usePlaceSearch("school");
+  // 📍 GPS en tiempo real
+  useEffect(() => {
 
+    if (!navigator.geolocation) {
+      alert("Tu navegador no soporta geolocalización");
+      return;
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+
+      (pos) => {
+
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+
+        setUserLocation(coords);
+
+        if (mapRef.current) {
+          mapRef.current.setView([coords.lat, coords.lng], 15);
+        }
+
+      },
+
+      (err) => {
+        console.error("Error GPS:", err);
+      },
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000,
+      }
+
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+
+  }, []);
+
+
+  // 🧹 limpiar mapa
   const clearMap = () => {
+
     if (!mapRef.current) return;
 
     mapRef.current.eachLayer((layer) => {
+
       if (layer instanceof L.Marker || layer instanceof L.Circle) {
         mapRef.current.removeLayer(layer);
       }
+
     });
+
   };
-console.log("DarkMode:", darkMode);
-useEffect(() => {
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const { latitude, longitude } = pos.coords;
-      if (mapRef.current) {
-        mapRef.current.setView([latitude, longitude], 15);
-      }
-    });
-  }
-}, [mapRef]);
+
+
+  // 🔎 búsqueda
+  const handleSearch = () => {
+
+    if (!mapRef.current || !userLocation) {
+      alert("Esperando ubicación GPS...");
+      return;
+    }
+
+    clearMap();
+
+    searchPlaces(
+      radius,
+      mapRef,
+      clearMap,
+      L,
+      userLocation.lat,
+      userLocation.lng
+    );
+
+  };
+
+
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors duration-300">
 
-      {/* HEADER */}
-      <header className="bg-white dark:bg-slate-800 shadow-md transition-colors duration-300">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
 
-          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
-            🗺 School Finder
-          </h1>
+      <header className="bg-white dark:bg-slate-800 shadow-md p-4 flex justify-between items-center">
 
-          {/* SWITCH */}
-          <button
-            onClick={toggleTheme}
-            className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 ${
-              darkMode ? "bg-slate-700" : "bg-slate-300"
-            }`}
-          >
-            <div
-              className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${
-                darkMode ? "translate-x-7" : "translate-x-0"
-              }`}
-            />
-          </button>
+        <h1 className="text-2xl font-bold dark:text-white">
+          🗺 School Finder
+        </h1>
 
-        </div>
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-lg dark:text-white"
+        >
+          {darkMode ? "☀️ Claro" : "🌙 Oscuro"}
+        </button>
+
       </header>
 
-      {/* CONTENIDO */}
-      <main className="max-w-4xl mx-auto px-4 py-8 text-slate-800 dark:text-white transition-colors duration-300">
+      <main className="max-w-4xl mx-auto px-4 py-8">
 
         <SearchControls
           radius={radius}
           setRadius={setRadius}
           loading={loading}
-          onSearch={() => {
-  clearMap(); // 1. Primero limpia lo viejo
-  // Agregamos un pequeñísimo delay o aseguramos que el mapRef esté listo
-  setTimeout(() => {
-    searchPlaces(radius, mapRef, clearMap, L); // 2. Luego busca lo nuevo
-  }, 100); 
-}}
+          onSearch={handleSearch}
         />
 
-        <MapView mapRef={mapRef} darkMode={darkMode} loading={loading} />
+        <MapView
+          mapRef={mapRef}
+          darkMode={darkMode}
+          loading={loading}
+        />
 
         <ResultsList
           places={places}
           hasSearched={hasSearched}
+          userLocation={userLocation}
         />
 
       </main>
+
     </div>
+
   );
 }
 

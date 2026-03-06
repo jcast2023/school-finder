@@ -2,83 +2,94 @@ import { useState } from "react";
 import { calculateDistance } from "../utils/distance";
 
 export default function usePlaceSearch(type = "school") {
+
   const [places, setPlaces] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
-  const searchPlaces = (radius, mapRef, clearMap, L) => {
+  // 🔎 búsqueda de lugares
+  const searchPlaces = async (radius, mapRef, clearMap, L, lat, lng) => {
+
     if (!mapRef.current) return;
 
     setLoading(true);
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
+    try {
 
-          clearMap();
-          mapRef.current.setView([latitude, longitude], 14);
+      console.log("GPS exacto:", lat, lng);
 
-          const userMarker = L.marker([latitude, longitude])
-            .addTo(mapRef.current)
-            .bindPopup("📍 Estás aquí")
-            .openPopup();
+      clearMap();
 
-          const circle = L.circle([latitude, longitude], {
-            radius,
-            color: "blue",
-            fillColor: "#4da6ff",
-            fillOpacity: 0.2,
-          }).addTo(mapRef.current);
+      mapRef.current.setView([lat, lng], 15);
 
-          const response = await fetch(
-            `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="${type}"](around:${radius},${latitude},${longitude});out;`
+      // 📍 marcador usuario
+      L.marker([lat, lng])
+        .addTo(mapRef.current)
+        .bindPopup("📍 Estás aquí")
+        .openPopup();
+
+      // 🔵 círculo de búsqueda
+      L.circle([lat, lng], {
+        radius,
+        color: "blue",
+        fillColor: "#4da6ff",
+        fillOpacity: 0.2,
+      }).addTo(mapRef.current);
+
+      // 🔎 consulta a Overpass API
+      const response = await fetch(
+        `https://overpass-api.de/api/interpreter?data=[out:json];node["amenity"="${type}"](around:${radius},${lat},${lng});out;`
+      );
+
+      const data = await response.json();
+
+      const list = [];
+
+      data.elements.forEach((place) => {
+
+        // evitar datos inválidos
+        if (!place.tags || !place.lat || !place.lon) return;
+
+        const distance = calculateDistance(
+          lat,
+          lng,
+          place.lat,
+          place.lon
+        );
+
+        const name = place.tags.name || "Colegio sin nombre";
+
+        // marcador colegio
+        L.marker([place.lat, place.lon])
+          .addTo(mapRef.current)
+          .bindPopup(
+            `🏫 ${name} <br/> 📏 ${distance.toFixed(2)} km`
           );
 
-          const data = await response.json();
+        list.push({
+          name,
+          lat: place.lat,
+          lon: place.lon,
+          distance
+        });
 
-          const newMarkers = [userMarker, circle];
-          const list = [];
+      });
 
-          data.elements.forEach((place) => {
-            if (!place.tags) return;
+      // ordenar por distancia (más cercano primero)
+      list.sort((a, b) => a.distance - b.distance);
 
-            const distance = calculateDistance(
-              latitude,
-              longitude,
-              place.lat,
-              place.lon
-            );
+      setPlaces(list);
+      setHasSearched(true);
 
-            const marker = L.marker([place.lat, place.lon])
-              .addTo(mapRef.current)
-              .bindPopup(
-                `🏫 ${place.tags.name || "Colegio sin nombre"} <br/> 📏 ${distance} km`
-              );
+    } catch (error) {
 
-            newMarkers.push(marker);
+      console.error("Error buscando lugares:", error);
 
-            list.push({
-              name: place.tags.name || "Colegio sin nombre",
-              lat: place.lat,
-              lon: place.lon,
-              distance: distance,
-            });
-          });
+    } finally {
 
-          setPlaces(list);
-          setHasSearched(true);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error(error);
-        setLoading(false);
-      }
-    );
+      setLoading(false);
+
+    }
   };
 
   return {
